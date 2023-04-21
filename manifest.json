@@ -1,0 +1,33 @@
+{
+  "manifest_version": 3,
+  "name": "Blarg",
+  "version": "1.0",
+  "description": "Label posts as annoying on social medias to train your own neural network to block them in the future.",
+  "permissions": ["storage", "activeTab", "scripting"],
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "images/icon16.png",
+      "48": "images/icon48.png",
+      "128": "images/icon128.png"
+    }
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://*.facebook.com/*",
+        "https://*.twitter.com/*",
+        "https://*.instagram.com/*",
+        "https://*.linkedin.com/*"
+      ],
+      "js": ["script.js"],
+      "css": ["style.css"]
+    }
+  ],
+  "icons": {
+    "16": "images/icon16.png",
+    "48": "images/icon48.png",
+    "128": "images/icon128.png"
+  }
+}
+
