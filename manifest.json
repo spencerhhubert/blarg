@@ -1,0 +1,31 @@
+{
+  "manifest_version": 3,
+  "name": "blarg",
+  "version": "1.0",
+  "description": "filter against slop",
+  "host_permissions": [
+    "https://api.twitter.com/*",
+    "https://twitter.com/*",
+    "https://x.com/*"
+  ],
+  "permissions": ["storage", "webRequest"],
+  "action": {
+    "default_popup": "popover.html"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://twitter.com/*", "https://x.com/*"],
+      "js": ["twitter.js", "storage.js", "content.js"],
+      "css": ["style.css"]
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["twitter.js", "storage.js", "reaction.js"],
+      "matches": ["https://twitter.com/*", "https://x.com/*"]
+    }
+  ]
+}

@@ -1,0 +1,49 @@
+<!doctype html>
+<html>
+    <head>
+        <title>Slop Tweets</title>
+        <style>
+            body,
+            html {
+                margin: 0;
+                padding: 8px;
+                height: 600px; /* Set a fixed height */
+                width: 350px;
+                overflow: hidden;
+            }
+            body {
+                font-family: monospace;
+                display: flex;
+                flex-direction: column;
+            }
+            .header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+            #search-bar {
+                width: 80%;
+                margin-bottom: 16px;
+            }
+            #embeddings-provider {
+                margin-bottom: 8px;
+            }
+            .slop-tweet {
+                margin-bottom: 16px;
+            }
+            .slop-tweet-username {
+                font-size: 1.1em;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="header">
+            <h1>Slop Tweets</h1>
+            <button id="gear-btn">Settings</button>
+        </div>
+        <div id="content"></div>
+        <script src="twitter.js"></script>
+        <script src="storage.js"></script>
+        <script src="popover.js"></script>
+    </body>
+</html>

@@ -1,0 +1,28 @@
+/* Use Twitter's CSS variables for theming */
+:root {
+    --background-color: var(--background-color);
+    --text-color: var(--text-color);
+    --secondary-text-color: var(--color-text-secondary);
+    --border-color: var(--border-color);
+    --hover-background-color: var(--hover-background-color);
+}
+
+/* Slop Button Styles */
+.tweet-slop {
+    display: inline-block;
+    margin-left: 8px;
+}
+
+.slop-tweet-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    padding: 4px 8px;
+    border-radius: 9999px;
+    color: var(--text-color);
+}
+
+.slop-tweet-btn:hover {
+    background-color: var(--hover-background-color);
+}
