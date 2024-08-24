@@ -3,29 +3,23 @@ class Tweet {
     this.tweetId = tweetId;
     this.author = author;
     this.content = content;
-    this.embedding = null;
+    this.embeddings = null;
   }
 
   embed = async (settings) => {
-    try {
-      console.log("settings before request", settings);
-      const response = await chrome.runtime.sendMessage({
-        action: "fetchEmbedding",
-        payload: {
-          content: this.content,
-          settings: settings.toJSON(),
-        },
-      });
-
-      if (response.error) {
-        console.error("Error fetching embedding:", response.error);
-      } else {
-        this.embedding = response.embedding;
-        console.log("Embedding received:", this.embedding);
-      }
-    } catch (error) {
-      console.error("Error in embed method:", error);
+    const res = await chrome.runtime.sendMessage({
+      action: "fetchEmbedding",
+      payload: {
+        content: this.content,
+        settings: settings.toJSON(),
+      },
+    });
+    const embedding = res.embedding;
+    if (this.embeddings === null) this.embeddings = {};
+    if (this.embeddings[settings.provider] === undefined) {
+      this.embeddings[settings.provider] = {};
     }
+    this.embeddings[settings.provider][settings.model] = embedding;
   };
 
   toJSON() {
@@ -33,7 +27,7 @@ class Tweet {
       tweetId: this.tweetId,
       author: this.author.toJSON(),
       content: this.content,
-      embedding: this.embedding,
+      embeddings: this.embeddings,
     };
   }
 
@@ -42,7 +36,7 @@ class Tweet {
       tweetId: json.tweetId,
       author: User.fromJSON(json.author),
       content: json.content,
-      embedding: json.embedding,
+      embeddings: json.embeddings,
     });
   }
 }
