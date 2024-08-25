@@ -1,13 +1,13 @@
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  if (request.action === "fetchEmbedding") {
-    fetchEmbedding(request.payload)
+  if (request.action === "fetchEmbeddings") {
+    fetchEmbeddings(request.payload)
       .then((result) => sendResponse(result))
       .catch((error) => sendResponse({ error: error.message }));
     return true; // Indicates that the response is asynchronous
   }
 });
 
-async function fetchEmbedding({ content, settings }) {
+async function fetchEmbeddings({ chunks, settings }) {
   if (!settings.apiKeys || !settings.apiKeys[settings.provider]) {
     throw new Error("API key not found for provider");
   }
@@ -22,7 +22,7 @@ async function fetchEmbedding({ content, settings }) {
           Authorization: `Bearer ${settings.apiKeys[settings.provider]}`,
         },
         body: JSON.stringify({
-          input: [content],
+          input: chunks,
           model: settings.model,
         }),
       }).then((r) => r.json());
@@ -30,7 +30,7 @@ async function fetchEmbedding({ content, settings }) {
         console.error("Error fetching embedding", res);
         throw new Error("Embedding not found in response");
       }
-      return { embedding: res.data[0].embedding };
+      return { embeddings: res.data.map((d) => d.embedding) };
     default:
       throw new Error(`Unsupported provider: ${settings.provider}`);
   }

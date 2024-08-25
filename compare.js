@@ -1,4 +1,5 @@
 function cosineSimilarity(a, b) {
+  console.log("cosineSimilarity", a, b);
   if (!a) {
     throw new Error("First array is empty");
   }

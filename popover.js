@@ -17,12 +17,14 @@ function displaySlopTweets(tweets) {
 
   for (const [tweetId, tweetJSON] of Object.entries(tweets)) {
     const tweet = Tweet.fromJSON(tweetJSON);
+    console.error("json", JSON.stringify(tweetJSON));
     const tweetElement = document.createElement("div");
     tweetElement.className = "slop-tweet";
     tweetElement.innerHTML = `
             <a href="https://twitter.com/${tweet.author.username}/status/${tweet.tweetId}" target="_blank" class="slop-tweet-username">@${tweet.author.username}</a>
             <div class="slop-tweet-content">${tweet.content}</div>
             <button data-tweet-id="${tweet.tweetId}" class="remove-slop-tweet">Remove</button>
+            ${tweet.isSlop ? "Bad" : "Good"}
         `;
     tweetsContainer.appendChild(tweetElement);
   }
@@ -42,7 +44,7 @@ const embeddingsProviders = Object.fromEntries(
   ]),
 );
 
-function displaySettings() {
+function displaySettings(settings) {
   const container = document.getElementById("content");
   container.innerHTML = `
         <form id="settings-form">
@@ -67,6 +69,14 @@ function displaySettings() {
             <button type="submit" id="settings-submit">Submit</button>
         </form>
         <button id="delete-all-btn">Delete All</button>
+        <div>
+            <label for="show-positive-posts">Show Positively Filtered Posts:</label>
+            <input
+              type="checkbox"
+              id="show-positive-posts"
+              ${!settings.deleteHtmlElements ? "checked" : ""}
+            />
+        </div>
     `;
 
   document
@@ -75,6 +85,16 @@ function displaySettings() {
   document
     .getElementById("delete-all-btn")
     .addEventListener("click", handleDeleteAll);
+  document
+    .getElementById("show-positive-posts")
+    .addEventListener("change", handleShowPositivePosts);
+}
+
+async function handleShowPositivePosts(e) {
+  const showPositivePosts = e.target.checked;
+  const settings = await getSettings();
+  settings.deleteHtmlElements = !showPositivePosts;
+  saveSettings(settings);
 }
 
 function handleDeleteAll() {
@@ -99,7 +119,7 @@ function switchState(newState) {
   if (currentState === "list-tweets") {
     displaySlopTweets(allSlopTweets);
   } else if (currentState === "settings") {
-    displaySettings();
+    getSettings().then(displaySettings);
   }
 }
 

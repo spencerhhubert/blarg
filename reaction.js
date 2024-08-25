@@ -1,27 +1,3 @@
-function addSlopButton(tweet, element) {
-  if (!element.querySelector(".tweet-slop")) {
-    if (tweet.tweetId && tweet.author.username) {
-      const slopDiv = document.createElement("div");
-      slopDiv.className = "tweet-slop";
-      slopDiv.innerHTML = `<button
-          data-tweet-id="${tweet.tweetId}"
-          data-author="${tweet.author.username}"
-          class="slop-tweet-btn"
-        >
-          👎
-        </button>
-      `;
-      element.appendChild(slopDiv);
-      tweets[tweet.tweetId] = tweet;
-    } else {
-      console.error("Failed to add slop button", {
-        tweetId: tweet.tweetId,
-        username: tweet.author.username,
-      });
-    }
-  }
-}
-
 function addGarbageCanEmoji(tweet, element) {
   const slopDiv = element.querySelector(".tweet-slop");
   if (slopDiv) {
@@ -31,10 +7,43 @@ function addGarbageCanEmoji(tweet, element) {
   }
 }
 
+function addSlopButton(tweet, element) {
+  if (!element.querySelector(".tweet-slop")) {
+    if (tweet.tweetId && tweet.author.username) {
+      const slopDiv = document.createElement("div");
+      slopDiv.className = "tweet-slop";
+      slopDiv.innerHTML = `
+        <button
+          data-tweet-id="${tweet.tweetId}"
+          data-author="${tweet.author.username}"
+          class="slop-tweet-btn thumbs-up"
+        >
+          👍
+        </button>
+        <button
+          data-tweet-id="${tweet.tweetId}"
+          data-author="${tweet.author.username}"
+          class="slop-tweet-btn thumbs-down"
+        >
+          👎
+        </button>
+      `;
+      element.appendChild(slopDiv);
+      tweets[tweet.tweetId] = tweet;
+    } else {
+      console.error("Failed to add slop buttons", {
+        tweetId: tweet.tweetId,
+        username: tweet.author.username,
+      });
+    }
+  }
+}
+
 async function handleSlopReaction(event) {
   if (event.target.classList.contains("slop-tweet-btn")) {
     const tweetElement = event.target.closest('[data-testid="tweet"]');
-    const tweet = tweetFromTweetElement(tweetElement);
+    const isSlop = event.target.classList.contains("thumbs-down");
+    const tweet = tweetFromTweetElement(tweetElement, isSlop);
     await tweet.embed(await getSettings());
     if (tweet.tweetId && tweet.author.username) {
       saveSlopTweet(tweet.toJSON());
@@ -70,19 +79,23 @@ async function decideIfKeep(tweet, element) {
     Object.values(slop).map((st) => st.onlyEmbedIfDontHaveIt(settings)),
   );
   const scores = Object.values(slop)
-    .filter((st) => st.hasEmbeddings(settings))
+    .filter((st) => st.hasEmbeddings(settings) && st.isSlop)
     .map((st) =>
-      cosineSimilarity(
-        tweet.embeddings[settings.provider][settings.model],
-        st.embeddings[settings.provider][settings.model],
+      st.embeddings[settings.provider][settings.model].map((chunk) =>
+        cosineSimilarity(
+          tweet.embeddings[settings.provider][settings.model][0],
+          chunk,
+        ),
       ),
-    );
+    )
+    .flat();
+
   console.log("scores", scores);
   const threshold = 0.75;
   if (scores.some((score) => score > threshold)) {
     console.log("remove");
     addGarbageCanEmoji(tweet, element);
-    // element.remove();
+    if (settings.deleteHtmlElements) element.remove();
   }
 }
 

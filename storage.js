@@ -2,11 +2,13 @@ class Settings {
   provider;
   model;
   apiKeys;
+  deleteHtmlElements;
 
   constructor({ provider, model, apiKeys }) {
     this.provider = provider;
     this.model = model;
     this.apiKeys = apiKeys;
+    this.deleteHtmlElements = false;
   }
 
   toJSON() {
@@ -14,11 +16,14 @@ class Settings {
       provider: this.provider,
       model: this.model,
       apiKeys: this.apiKeys,
+      deleteHtmlElements: this.deleteHtmlElements,
     };
   }
 
   static fromJSON(json) {
-    return new Settings(json);
+    const out = new Settings(json);
+    out.deleteHtmlElements = json.deleteHtmlElements;
+    return out;
   }
 }
 
