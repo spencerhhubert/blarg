@@ -62,6 +62,17 @@ async function getSettings() {
   });
 }
 
+async function getSlopTweets() {
+  return new Promise((resolve) => {
+    chrome.storage.local.get(["slop"], (result) => {
+      for (const id in result.slop.tweets) {
+        result.slop.tweets[id] = Tweet.fromJSON(result.slop.tweets[id]);
+      }
+      resolve(result.slop.tweets);
+    });
+  });
+}
+
 function initStorage() {
   chrome.storage.local.get(["slop"], (result) => {
     if (!result.slop) {
@@ -87,19 +98,4 @@ function initStorage() {
       setSlopTweets(slopTweets);
     }
   });
-}
-
-if (typeof window !== "undefined") {
-  window.Settings = Settings;
-  window.saveSettings = saveSettings;
-}
-
-// Export for module usage
-if (typeof module !== "undefined" && module.exports) {
-  module.exports = {
-    Settings,
-    saveSlopTweet,
-    getSettings,
-    initStorage,
-  };
 }

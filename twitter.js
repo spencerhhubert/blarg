@@ -4,22 +4,53 @@ class Tweet {
     this.author = author;
     this.content = content;
     this.embeddings = null;
+    this.getEmbeddingsPromise = null;
   }
 
+  hasEmbeddings = (settings) => {
+    return (
+      this.embeddings &&
+      this.embeddings[settings.provider] &&
+      this.embeddings[settings.provider][settings.model]
+    );
+  };
+
   embed = async (settings) => {
-    const res = await chrome.runtime.sendMessage({
-      action: "fetchEmbedding",
-      payload: {
-        content: this.content,
-        settings: settings.toJSON(),
-      },
+    this.getEmbeddingsPromise = new Promise(async (resolve) => {
+      const res = await chrome.runtime.sendMessage({
+        action: "fetchEmbedding",
+        payload: {
+          content: this.content,
+          settings: settings.toJSON(),
+        },
+      });
+      if (!res.embedding) {
+        console.warn("not setting embeddings", res);
+        this.getEmbeddingsPromise = null;
+        resolve();
+        return;
+      }
+      const embedding = res.embedding;
+      console.log("Embedding fetched", res);
+      if (this.embeddings === null) this.embeddings = {};
+      if (this.embeddings[settings.provider] === undefined) {
+        this.embeddings[settings.provider] = {};
+      }
+      this.embeddings[settings.provider][settings.model] = embedding;
+      this.getEmbeddingsPromise = null;
+      resolve();
     });
-    const embedding = res.embedding;
-    if (this.embeddings === null) this.embeddings = {};
-    if (this.embeddings[settings.provider] === undefined) {
-      this.embeddings[settings.provider] = {};
+    return this.getEmbeddingsPromise;
+  };
+
+  onlyEmbedIfDontHaveIt = async (settings) => {
+    if (
+      (this.embeddings === null ||
+        this.embeddings[settings.provider] === undefined) &&
+      this.getEmbeddingsPromise === null
+    ) {
+      await this.embed(settings);
     }
-    this.embeddings[settings.provider][settings.model] = embedding;
   };
 
   toJSON() {
@@ -32,12 +63,13 @@ class Tweet {
   }
 
   static fromJSON(json) {
-    return new Tweet({
+    const out = new Tweet({
       tweetId: json.tweetId,
       author: User.fromJSON(json.author),
       content: json.content,
-      embeddings: json.embeddings,
     });
+    if (json.embeddings) out.embeddings = json.embeddings;
+    return out;
   }
 }
 
@@ -110,18 +142,8 @@ function isTweetIdFormat(tweetId) {
   return Number.isInteger(tweetId) && tweetId.toString().length === 19;
 }
 
-if (typeof window !== "undefined") {
-  window.User = User;
-  window.Tweet = Tweet;
-}
-
-// Export for module usage
-if (typeof module !== "undefined" && module.exports) {
-  module.exports = {
-    User,
-    Tweet,
-    isTweetIdFormat,
-    tweetFromTweetElement,
-    extractTweetMetaFromTweetElement,
-  };
+async function waitForAllTweets(tweets) {
+  return Promise.all(
+    Object.values(tweets).map((tweet) => tweet.getEmbeddingsPromise),
+  );
 }

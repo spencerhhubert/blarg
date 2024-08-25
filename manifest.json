@@ -18,14 +18,14 @@
   "content_scripts": [
     {
       "matches": ["https://twitter.com/*", "https://x.com/*"],
-      "js": ["twitter.js", "storage.js", "content.js"],
+      "js": [
+        "compare.js",
+        "reaction.js",
+        "twitter.js",
+        "storage.js",
+        "content.js"
+      ],
       "css": ["style.css"]
-    }
-  ],
-  "web_accessible_resources": [
-    {
-      "resources": ["twitter.js", "storage.js", "reaction.js"],
-      "matches": ["https://twitter.com/*", "https://x.com/*"]
     }
   ]
 }

@@ -1,13 +1,8 @@
-async function init() {
-  const { resetReaction } = await import(chrome.runtime.getURL("reaction.js"));
-  const initStorage = window.initStorage;
+const tweets = {};
 
-  function reset() {
-    resetReaction();
-    initStorage();
-  }
-
-  setTimeout(reset, 2000);
+function reset() {
+  initStorage();
+  watchTweets();
 }
 
-init();
+setTimeout(reset, 2000);

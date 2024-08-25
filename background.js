@@ -26,6 +26,10 @@ async function fetchEmbedding({ content, settings }) {
           model: settings.model,
         }),
       }).then((r) => r.json());
+      if (!res.data || !res.data[0] || !res.data[0].embedding) {
+        console.error("Error fetching embedding", res);
+        throw new Error("Embedding not found in response");
+      }
       return { embedding: res.data[0].embedding };
     default:
       throw new Error(`Unsupported provider: ${settings.provider}`);

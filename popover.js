@@ -66,11 +66,20 @@ function displaySettings() {
             <input type="text" id="api-key" placeholder="API Key" />
             <button type="submit" id="settings-submit">Submit</button>
         </form>
+        <button id="delete-all-btn">Delete All</button>
     `;
 
   document
     .getElementById("settings-submit")
     .addEventListener("click", handleSaveSettings);
+  document
+    .getElementById("delete-all-btn")
+    .addEventListener("click", handleDeleteAll);
+}
+
+function handleDeleteAll() {
+  setSlopTweets({});
+  switchState("list-tweets");
 }
 
 function handleSaveSettings(e) {
