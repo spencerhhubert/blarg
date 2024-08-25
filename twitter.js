@@ -129,20 +129,6 @@ function tweetFromTweetElement(element, isSlop) {
   return new Tweet({ tweetId, author, content, isSlop });
 }
 
-function extractTweetMetaFromTweetElement(element) {
-  const tweetLink = element.querySelector('a[href*="/status/"]');
-  const tweetId = tweetLink
-    ? tweetLink.href.split("/status/")[1].split("?")[0]
-    : null;
-
-  const usernameElement = element.querySelector(
-    '[data-testid="User-Name"] a[role="link"][href^="/"]',
-  );
-  const username = usernameElement ? usernameElement.href.split("/")[3] : null;
-
-  return { tweetId, username };
-}
-
 function isTweetIdFormat(tweetId) {
   try {
     tweetId = parseInt(tweetId);

@@ -11,26 +11,30 @@ async function fetchEmbeddings({ chunks, settings }) {
   if (!settings.apiKeys || !settings.apiKeys[settings.provider]) {
     throw new Error("API key not found for provider");
   }
+  console.error("fetching embeddings", settings);
+  async function req(url) {
+    const res = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${settings.apiKeys[settings.provider]}`,
+      },
+      body: JSON.stringify({
+        input: chunks,
+        model: settings.model,
+      }),
+    }).then((r) => r.json());
+    if (!res.data || !res.data[0] || !res.data[0].embedding) {
+      console.error("Error fetching embedding", res);
+      throw new Error("Embedding not found in response");
+    }
+    return { embeddings: res.data.map((d) => d.embedding) };
+  }
   switch (settings.provider) {
     case "OpenAI":
-      throw new Error("OpenAI embedding not implemented");
+      return req("https://api.openai.com/v1/embeddings");
     case "Anthropic":
-      const res = await fetch("https://api.voyageai.com/v1/embeddings", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${settings.apiKeys[settings.provider]}`,
-        },
-        body: JSON.stringify({
-          input: chunks,
-          model: settings.model,
-        }),
-      }).then((r) => r.json());
-      if (!res.data || !res.data[0] || !res.data[0].embedding) {
-        console.error("Error fetching embedding", res);
-        throw new Error("Embedding not found in response");
-      }
-      return { embeddings: res.data.map((d) => d.embedding) };
+      return req("https://api.voyageai.com/v1/embeddings");
     default:
       throw new Error(`Unsupported provider: ${settings.provider}`);
   }

@@ -102,14 +102,16 @@ function handleDeleteAll() {
   switchState("list-tweets");
 }
 
-function handleSaveSettings(e) {
+async function handleSaveSettings(e) {
   e.preventDefault();
   const [provider, model] = document
     .getElementById("embeddings-provider")
     .value.split("/");
+  const settings = await getSettings();
+  settings.provider = provider;
+  settings.model = model;
   const apiKey = document.getElementById("api-key").value;
-  const apiKeys = { [provider]: apiKey };
-  const settings = new Settings({ provider, model, apiKeys });
+  if (apiKey) settings.apiKeys[provider] = apiKey;
   saveSettings(settings);
   switchState("list-tweets");
 }
