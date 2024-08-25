@@ -1,34 +1,6 @@
 let allSlopTweets = {};
 let currentState = "list-tweets";
 
-function displaySlopTweets(tweets) {
-  const container = document.getElementById("content");
-  container.innerHTML = `<div id="slop-tweets-container"></div>`;
-
-  const tweetsContainer = document.getElementById("slop-tweets-container");
-
-  if (Object.keys(tweets).length === 0) {
-    tweetsContainer.innerHTML = "<p>No slop tweets found.</p>";
-    return;
-  }
-
-  for (const [tweetId, tweetJSON] of Object.entries(tweets)) {
-    const tweet = Tweet.fromJSON(tweetJSON);
-    console.error("json", JSON.stringify(tweetJSON));
-    const tweetElement = document.createElement("div");
-    tweetElement.className = "slop-tweet";
-    tweetElement.innerHTML = `
-            <a href="https://twitter.com/${tweet.author.username}/status/${tweet.tweetId}" target="_blank" class="slop-tweet-username">@${tweet.author.username}</a>
-            <div class="slop-tweet-content">${tweet.content}</div>
-            <button data-tweet-id="${tweet.tweetId}" class="remove-slop-tweet">Remove</button>
-            ${tweet.isSlop ? "Bad" : "Good"}
-        `;
-    tweetsContainer.appendChild(tweetElement);
-  }
-
-  setupEventListeners();
-}
-
 const embeddingsProviders_ = {
   OpenAI: ["text-embedding-3-small", "text-embedding-3-large"],
   Anthropic: ["voyage-2"],
@@ -87,6 +59,38 @@ function displaySettings(settings) {
     .addEventListener("change", handleShowPositivePosts);
 }
 
+function displaySlopTweets(tweets) {
+  const container = document.getElementById("content");
+  container.innerHTML = `<div id="slop-tweets-container"></div>`;
+
+  const tweetsContainer = document.getElementById("slop-tweets-container");
+
+  if (Object.keys(tweets).length === 0) {
+    tweetsContainer.innerHTML = "<p>Nothing saved</p>";
+    return;
+  }
+
+  for (const [tweetId, tweetJSON] of Object.entries(tweets)) {
+    const tweet = Tweet.fromJSON(tweetJSON);
+    console.error("json", JSON.stringify(tweetJSON));
+    const tweetElement = document.createElement("div");
+    tweetElement.className = "slop-tweet";
+    tweetElement.innerHTML = `
+            <a href="https://twitter.com/${tweet.author.username}/status/${tweet.tweetId}" target="_blank" class="slop-tweet-username">@${tweet.author.username}</a>
+            <div class="slop-tweet-content">${tweet.content}</div>
+            <button data-tweet-id="${tweet.tweetId}" class="remove-slop-tweet">Remove</button>
+            ${tweet.isSlop ? "Bad" : "Good"}
+        `;
+    tweetsContainer.appendChild(tweetElement);
+  }
+
+  tweetsContainer.addEventListener("click", (e) => {
+    if (e.target.classList.contains("remove-slop-tweet")) {
+      removeSlopTweet(e.target.getAttribute("data-tweet-id"));
+    }
+  });
+}
+
 async function handleShowPositivePosts(e) {
   const showPositivePosts = e.target.checked;
   const settings = await getSettings();
@@ -124,21 +128,10 @@ function switchState(newState) {
 
 function removeSlopTweet(tweetId) {
   delete allSlopTweets[tweetId];
-  chrome.storage.local.set({ slopTweets: allSlopTweets }, () => {
-    displaySlopTweets(allSlopTweets);
-  });
+  setSlopTweets(allSlopTweets);
 }
 
-function setupEventListeners() {
-  const tweetsContainer = document.getElementById("slop-tweets-container");
-  tweetsContainer.addEventListener("click", (e) => {
-    if (e.target.classList.contains("remove-slop-tweet")) {
-      removeSlopTweet(e.target.getAttribute("data-tweet-id"));
-    }
-  });
-}
-
-function initPopover() {
+function resetPopover() {
   chrome.storage.local.get(["slop"], (result) => {
     allSlopTweets = result.slop.tweets || {};
     switchState("list-tweets");
@@ -149,4 +142,4 @@ function initPopover() {
   });
 }
 
-document.addEventListener("DOMContentLoaded", initPopover);
+document.addEventListener("DOMContentLoaded", resetPopover);

@@ -23,7 +23,7 @@
         "reaction.js",
         "twitter.js",
         "storage.js",
-        "content.js"
+        "main.js"
       ],
       "css": ["style.css"]
     }
