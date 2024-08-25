@@ -3,8 +3,7 @@
 chrome extension to help curate your x feed with embeddings
 
 ## todo
-- up button
-- toggle to show trash or just delete whole html element
-- openai embeddings
-- chunk multiple parts of one tweet
 - input arbitrary text
+- handle images somehow. twitter is like 50% images these days. llm write me description?
+  - break up settings for embeddings and llm models
+- do something with the positives. maybe just always return if postive?

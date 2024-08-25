@@ -3,10 +3,7 @@ let currentState = "list-tweets";
 
 function displaySlopTweets(tweets) {
   const container = document.getElementById("content");
-  container.innerHTML = `
-        <input type="text" id="search-bar" placeholder="Search...">
-        <div id="slop-tweets-container"></div>
-    `;
+  container.innerHTML = `<div id="slop-tweets-container"></div>`;
 
   const tweetsContainer = document.getElementById("slop-tweets-container");
 
@@ -132,27 +129,8 @@ function removeSlopTweet(tweetId) {
   });
 }
 
-function searchSlopTweets(query) {
-  const filteredTweets = Object.fromEntries(
-    Object.entries(allSlopTweets).filter(([_, tweetJSON]) => {
-      const tweet = Tweet.fromJSON(tweetJSON);
-      return (
-        tweet.content.toLowerCase().includes(query.toLowerCase()) ||
-        tweet.author.username.toLowerCase().includes(query.toLowerCase())
-      );
-    }),
-  );
-  displaySlopTweets(filteredTweets);
-}
-
 function setupEventListeners() {
-  const searchBar = document.getElementById("search-bar");
   const tweetsContainer = document.getElementById("slop-tweets-container");
-
-  searchBar.addEventListener("input", (e) => {
-    searchSlopTweets(e.target.value);
-  });
-
   tweetsContainer.addEventListener("click", (e) => {
     if (e.target.classList.contains("remove-slop-tweet")) {
       removeSlopTweet(e.target.getAttribute("data-tweet-id"));
@@ -163,7 +141,6 @@ function setupEventListeners() {
 function initPopover() {
   chrome.storage.local.get(["slop"], (result) => {
     allSlopTweets = result.slop.tweets || {};
-    console.log("Slop tweets loaded", allSlopTweets);
     switchState("list-tweets");
   });
 
