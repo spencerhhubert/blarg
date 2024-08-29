@@ -8,9 +8,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 });
 
 async function fetchEmbeddings({ chunks, settings }) {
-  if (!settings.apiKeys || !settings.apiKeys[settings.provider]) {
+  if (!settings.apiKeys || !settings.apiKeys[settings.provider])
     throw new Error("API key not found for provider");
-  }
   console.error("fetching embeddings", settings);
   async function req(url) {
     const res = await fetch(url, {

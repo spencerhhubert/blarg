@@ -28,11 +28,11 @@ class Tweet {
 
   embed = async (settings) => {
     this.getEmbeddingsPromise = new Promise(async (resolve) => {
-      const chunks = this.chunk();
+      // const chunks = this.chunk();
       const res = await chrome.runtime.sendMessage({
         action: "fetchEmbeddings",
         payload: {
-          chunks,
+          chunks: [this.content],
           settings: settings.toJSON(),
         },
       });
@@ -76,10 +76,24 @@ class Tweet {
       tweetId: json.tweetId,
       author: User.fromJSON(json.author),
       content: json.content,
-      isSlop: json.isSlop || false,
+      isSlop: json.isSlop || null,
     });
     if (json.embeddings) out.embeddings = json.embeddings;
     return out;
+  }
+
+  static fromTweetElement(element, isSlop) {
+    const tweetLink = element.querySelector('a[href*="/status/"]');
+    const tweetId = tweetLink
+      ? tweetLink.href.split("/status/")[1].split("?")[0]
+      : null;
+
+    const author = User.fromTweetElement(element);
+
+    const contentElement = element.querySelector('[data-testid="tweetText"]');
+    const content = contentElement ? contentElement.textContent : null;
+
+    return new Tweet({ tweetId, author, content, isSlop });
   }
 }
 
@@ -99,34 +113,22 @@ class User {
   static fromJSON(json) {
     return new User(json);
   }
-}
 
-function userFromTweetElement(element) {
-  const usernameElement = element.querySelector(
-    '[data-testid="User-Name"] a[role="link"][href^="/"]',
-  );
-  const username = usernameElement ? usernameElement.href.split("/")[3] : null;
+  static fromTweetElement(element) {
+    const usernameElement = element.querySelector(
+      '[data-testid="User-Name"] a[role="link"][href^="/"]',
+    );
+    const username = usernameElement
+      ? usernameElement.href.split("/")[3]
+      : null;
 
-  if (!username) {
-    console.error("Failed to get username from tweet element", element);
-    return null;
+    if (!username) {
+      console.error("Failed to get username from tweet element", element);
+      return null;
+    }
+
+    return new User({ username, bio: null });
   }
-
-  return new User({ username, bio: null });
-}
-
-function tweetFromTweetElement(element, isSlop) {
-  const tweetLink = element.querySelector('a[href*="/status/"]');
-  const tweetId = tweetLink
-    ? tweetLink.href.split("/status/")[1].split("?")[0]
-    : null;
-
-  const author = userFromTweetElement(element);
-
-  const contentElement = element.querySelector('[data-testid="tweetText"]');
-  const content = contentElement ? contentElement.textContent : null;
-
-  return new Tweet({ tweetId, author, content, isSlop });
 }
 
 function isTweetIdFormat(tweetId) {
@@ -136,10 +138,4 @@ function isTweetIdFormat(tweetId) {
     return false;
   }
   return Number.isInteger(tweetId) && tweetId.toString().length === 19;
-}
-
-async function waitForAllTweets(tweets) {
-  return Promise.all(
-    Object.values(tweets).map((tweet) => tweet.getEmbeddingsPromise),
-  );
 }

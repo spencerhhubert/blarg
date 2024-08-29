@@ -6,8 +6,8 @@
             body,
             html {
                 margin: 0;
-                padding: 8px;
-                height: 600px; /* Set a fixed height */
+                padding: 0;
+                height: 600px;
                 width: 350px;
                 overflow: hidden;
             }
@@ -17,9 +17,21 @@
                 flex-direction: column;
             }
             .header {
+                position: sticky;
+                top: 0;
+                background-color: white;
+                z-index: 10;
+                padding: 8px;
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
+                border-bottom: 1px solid #ccc;
+            }
+            #content {
+                flex-grow: 1;
+                overflow-y: auto;
+                overflow-x: hidden;
+                padding: 8px;
             }
             #search-bar {
                 width: 80%;
@@ -30,9 +42,22 @@
             }
             .slop-tweet {
                 margin-bottom: 16px;
+                word-wrap: break-word;
+                overflow-wrap: break-word;
             }
             .slop-tweet-username {
                 font-size: 1.1em;
+            }
+            .cluster {
+                border: 1px solid #ccc;
+                margin-bottom: 20px;
+                padding: 10px;
+            }
+            .cluster h3 {
+                margin-top: 0;
+            }
+            #map-container {
+                max-width: 100%;
             }
         </style>
     </head>
@@ -40,8 +65,10 @@
         <div class="header">
             <h1>Slop Tweets</h1>
             <button id="gear-btn">Settings</button>
+            <button id="map-btn">Map</button>
         </div>
         <div id="content"></div>
+        <script src="compare.js"></script>
         <script src="twitter.js"></script>
         <script src="storage.js"></script>
         <script src="popover.js"></script>

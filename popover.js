@@ -1,5 +1,5 @@
-let allSlopTweets = {};
 let currentState = "list-tweets";
+let store;
 
 const embeddingsProviders_ = {
   OpenAI: ["text-embedding-3-small", "text-embedding-3-large"],
@@ -60,29 +60,29 @@ function displaySettings(settings) {
 }
 
 function displaySlopTweets(tweets) {
+  tweets = Object.values(store.tweets);
+
   const container = document.getElementById("content");
   container.innerHTML = `<div id="slop-tweets-container"></div>`;
 
   const tweetsContainer = document.getElementById("slop-tweets-container");
 
-  if (Object.keys(tweets).length === 0) {
+  if (tweets.length === 0) {
     tweetsContainer.innerHTML = "<p>Nothing saved</p>";
     return;
   }
 
-  for (const [tweetId, tweetJSON] of Object.entries(tweets)) {
-    const tweet = Tweet.fromJSON(tweetJSON);
-    console.error("json", JSON.stringify(tweetJSON));
-    const tweetElement = document.createElement("div");
-    tweetElement.className = "slop-tweet";
-    tweetElement.innerHTML = `
-            <a href="https://twitter.com/${tweet.author.username}/status/${tweet.tweetId}" target="_blank" class="slop-tweet-username">@${tweet.author.username}</a>
-            <div class="slop-tweet-content">${tweet.content}</div>
-            <button data-tweet-id="${tweet.tweetId}" class="remove-slop-tweet">Remove</button>
-            ${tweet.isSlop ? "Bad" : "Good"}
-        `;
-    tweetsContainer.appendChild(tweetElement);
-  }
+  tweets.sort((a, b) => {
+    //sort by isSlop, which is null, true, or false. put null at bottom
+    if (a.isSlop === b.isSlop) return 0;
+    if (a.isSlop === null) return 1;
+    if (b.isSlop === null) return -1;
+    return a.isSlop ? 1 : -1;
+  });
+
+  tweets.forEach((tweet) => {
+    tweetsContainer.appendChild(mkTweetElement(tweet));
+  });
 
   tweetsContainer.addEventListener("click", (e) => {
     if (e.target.classList.contains("remove-slop-tweet")) {
@@ -91,16 +91,64 @@ function displaySlopTweets(tweets) {
   });
 }
 
-async function handleShowPositivePosts(e) {
-  const showPositivePosts = e.target.checked;
-  const settings = await getSettings();
-  settings.deleteHtmlElements = !showPositivePosts;
-  saveSettings(settings);
+function displayMap() {
+  const tweets = Object.values(store.tweets);
+  const container = document.getElementById("content");
+  container.innerHTML = '<div id="map-container"></div>';
+  const mapContainer = document.getElementById("map-container");
+
+  if (tweets.length === 0) {
+    mapContainer.innerHTML = "<p>No tweets available for mapping</p>";
+    return;
+  }
+
+  const settings = store.settings;
+  console.error("settings", JSON.stringify(settings.toJSON()));
+  console.error("t", JSON.stringify(tweets));
+  const embeddings = tweets
+    .filter((tweet) => tweet.hasEmbeddings(settings))
+    .map((tweet) => tweet.embeddings[settings.provider][settings.model][0]);
+
+  // Use k-means clustering
+  const k = Math.min(5, tweets.length); // Use 5 clusters or less if there are fewer tweets
+  const { assignments } = kMeansClustering(embeddings, k);
+
+  // Group tweets by cluster
+  const clusters = {};
+  assignments.forEach((cluster, index) => {
+    if (!clusters[cluster]) clusters[cluster] = [];
+    clusters[cluster].push(tweets[index]);
+  });
+
+  // Display clusters
+  Object.entries(clusters).forEach(([cluster, clusterTweets]) => {
+    const clusterDiv = document.createElement("div");
+    clusterDiv.className = "cluster";
+    clusterDiv.innerHTML = `<h3>Cluster ${parseInt(cluster) + 1}</h3>`;
+    clusterTweets.forEach((tweet) => {
+      clusterDiv.appendChild(mkTweetElement(tweet));
+    });
+    mapContainer.appendChild(clusterDiv);
+  });
 }
 
-function handleDeleteAll() {
-  setSlopTweets({});
-  switchState("list-tweets");
+function mkTweetElement(tweet) {
+  const tweetElement = document.createElement("div");
+  tweetElement.className = "slop-tweet";
+  tweetElement.innerHTML = `
+    <a href="https://twitter.com/${tweet.author.username}/status/${tweet.tweetId}" target="_blank" class="slop-tweet-username">@${tweet.author.username}</a>
+    <div class="slop-tweet-content">${tweet.content}</div>
+    <button data-tweet-id="${tweet.tweetId}" class="remove-slop-tweet">Remove</button>
+    <div>Status: ${tweet.isSlop === true ? "Bad" : tweet.isSlop === false ? "Good" : "Nothing"}</div>
+  `;
+  return tweetElement;
+}
+
+async function handleShowPositivePosts(e) {
+  const showPositivePosts = e.target.checked;
+  const settings = store.settings;
+  settings.deleteHtmlElements = !showPositivePosts;
+  await store.write();
 }
 
 async function handleSaveSettings(e) {
@@ -108,37 +156,45 @@ async function handleSaveSettings(e) {
   const [provider, model] = document
     .getElementById("embeddings-provider")
     .value.split("/");
-  const settings = await getSettings();
+  const settings = store.settings;
   settings.provider = provider;
   settings.model = model;
   const apiKey = document.getElementById("api-key").value;
   if (apiKey) settings.apiKeys[provider] = apiKey;
-  saveSettings(settings);
+  console.error("wrote api key", settings.apiKeys[provider]);
+  await store.write();
   switchState("list-tweets");
 }
 
 function switchState(newState) {
   currentState = newState;
   if (currentState === "list-tweets") {
-    displaySlopTweets(allSlopTweets);
+    displaySlopTweets(store.tweets);
   } else if (currentState === "settings") {
-    getSettings().then(displaySettings);
+    displaySettings(store.settings);
+  } else if (currentState === "map") {
+    displayMap();
   }
 }
-
-function removeSlopTweet(tweetId) {
-  delete allSlopTweets[tweetId];
-  setSlopTweets(allSlopTweets);
+async function handleDeleteAll() {
+  switchState("list-tweets");
+  store.tweets = {};
+  await store.write();
 }
 
-function resetPopover() {
-  chrome.storage.local.get(["slop"], (result) => {
-    allSlopTweets = result.slop.tweets || {};
-    switchState("list-tweets");
-  });
+async function removeSlopTweet(tweetId) {
+  delete store.tweets[tweetId];
+  await store.write();
+}
 
+async function resetPopover() {
+  store = await Store.init();
+  switchState(currentState);
   document.getElementById("gear-btn").addEventListener("click", function () {
     switchState(currentState === "list-tweets" ? "settings" : "list-tweets");
+  });
+  document.getElementById("map-btn").addEventListener("click", function () {
+    switchState(currentState === "map" ? "list-tweets" : "map");
   });
 }
 
