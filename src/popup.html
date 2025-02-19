@@ -1,0 +1,42 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Things you don't want to see</title>
+    <style>
+      body {
+        font-family: sans-serif;
+        margin: 16px;
+      }
+      h1 {
+        font-size: 16px;
+        margin-bottom: 8px;
+      }
+      textarea,
+      input {
+        width: 300px;
+        padding: 4px;
+        font-size: 14px;
+        margin-bottom: 12px;
+      }
+      textarea {
+        height: 400px;
+        resize: vertical;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>What things do you NOT want to see?</h1>
+    <textarea
+      id="filter_input"
+      placeholder='LinkedIn slop, like "What I learned about {thing}, thread 🧵"'
+    ></textarea>
+    <h1>OpenAI API Key</h1>
+    <input
+      id="openai_key_input"
+      type="text"
+      placeholder="Enter your OpenAI key"
+    />
+    <script src="popup.js"></script>
+  </body>
+</html>

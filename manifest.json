@@ -2,30 +2,18 @@
   "manifest_version": 3,
   "name": "blarg",
   "version": "1.0",
-  "description": "filter against slop",
-  "host_permissions": [
-    "https://api.twitter.com/*",
-    "https://twitter.com/*",
-    "https://x.com/*"
-  ],
-  "permissions": ["storage", "webRequest"],
+  "description": "filter posts with random trash can insertion",
   "action": {
-    "default_popup": "src/popover.html"
+    "default_popup": "src/popup.html"
   },
-  "background": {
-    "service_worker": "src/background.js"
-  },
+  "host_permissions": ["<all_urls>"],
+  "permissions": ["storage"],
   "content_scripts": [
     {
-      "matches": ["https://twitter.com/*", "https://x.com/*"],
-      "js": [
-        "src/compare.js",
-        "src/reaction.js",
-        "src/twitter.js",
-        "src/storage.js",
-        "src/main.js"
-      ],
-      "css": ["src/style.css"]
+      "matches": ["<all_urls>"],
+      "js": ["src/store.js", "src/openai.js", "src/main.js"],
+      "css": ["src/style.css"],
+      "run_at": "document_end"
     }
   ]
 }
