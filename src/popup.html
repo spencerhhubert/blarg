@@ -23,9 +23,26 @@
         height: 400px;
         resize: vertical;
       }
+      .toggle-row {
+        display: flex;
+        align-items: center;
+        margin-bottom: 12px;
+      }
+      .toggle-row input {
+        width: auto;
+        margin-right: 8px;
+      }
     </style>
   </head>
   <body>
+    <div class="toggle-row">
+      <input type="checkbox" id="enabled_input" />
+      <label for="enabled_input">Enable Filtering</label>
+    </div>
+    <div class="toggle-row">
+      <input type="checkbox" id="trash_only_input" />
+      <label for="trash_only_input">Just trash can</label>
+    </div>
     <h1>What things do you NOT want to see?</h1>
     <textarea
       id="filter_input"

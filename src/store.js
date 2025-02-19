@@ -32,11 +32,13 @@ class Post {
 }
 
 class Store {
-  constructor(posts, filter, openai_key, processed_ids) {
+  constructor(posts, filter, openai_key, processed_ids, enabled, trash_only) {
     this.posts = posts;
     this.filter = filter;
     this.openai_key = openai_key;
     this.processed_ids = processed_ids || new Set();
+    this.enabled = enabled;
+    this.trash_only = trash_only;
   }
 
   toJSON() {
@@ -47,6 +49,8 @@ class Store {
       filter: this.filter,
       openai_key: this.openai_key,
       processed_ids: Array.from(this.processed_ids),
+      enabled: this.enabled,
+      trash_only: this.trash_only,
     };
   }
 
@@ -55,9 +59,16 @@ class Store {
       chrome.storage.local.get(["blarg"], (result) => {
         let data = result.blarg;
         if (!data) {
-          data = { posts: {}, filter: "", openai_key: "", processed_ids: [] };
+          data = {
+            posts: {},
+            filter: "",
+            openai_key: "",
+            processed_ids: [],
+            enabled: true,
+            trash_only: false,
+          };
           chrome.storage.local.set({ blarg: data }, () => {
-            resolve(new Store({}, "", "", new Set()));
+            resolve(new Store({}, "", "", new Set(), true, false));
           });
         } else {
           if (typeof data.filter !== "string") data.filter = "";
@@ -68,7 +79,14 @@ class Store {
           }
           const processed_ids = new Set(data.processed_ids || []);
           resolve(
-            new Store(posts, data.filter, data.openai_key, processed_ids),
+            new Store(
+              posts,
+              data.filter,
+              data.openai_key,
+              processed_ids,
+              data.enabled,
+              data.trash_only,
+            ),
           );
         }
       });

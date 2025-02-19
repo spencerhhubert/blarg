@@ -8,6 +8,12 @@ let is_processing = false;
 
 function addTrashCan(element) {
   if (element.querySelector(".trash-can")) return;
+
+  if (!store.trash_only) {
+    element.remove();
+    return;
+  }
+
   const trash = document.createElement("span");
   trash.className = "trash-can";
   trash.textContent = "🗑️";
@@ -15,6 +21,7 @@ function addTrashCan(element) {
 }
 
 function processPostElement(element) {
+  // if (!store.enabled) return;
   if (element.__processed) return;
 
   const { platform, realId, content } = getPostDetails(element);
@@ -194,6 +201,7 @@ async function analyzePostsBatch() {
 
 Store.init().then((s) => {
   store = s;
+  if (!store.enabled) return;
   processExistingPosts();
   observePosts();
 });
