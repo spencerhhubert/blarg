@@ -10,22 +10,22 @@
   ],
   "permissions": ["storage", "webRequest"],
   "action": {
-    "default_popup": "popover.html"
+    "default_popup": "src/popover.html"
   },
   "background": {
-    "service_worker": "background.js"
+    "service_worker": "src/background.js"
   },
   "content_scripts": [
     {
       "matches": ["https://twitter.com/*", "https://x.com/*"],
       "js": [
-        "compare.js",
-        "reaction.js",
-        "twitter.js",
-        "storage.js",
-        "main.js"
+        "src/compare.js",
+        "src/reaction.js",
+        "src/twitter.js",
+        "src/storage.js",
+        "src/main.js"
       ],
-      "css": ["style.css"]
+      "css": ["src/style.css"]
     }
   ]
 }
