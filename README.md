@@ -1,13 +1,2 @@
 # blarg
-
-chrome extension to help curate your x feed with embeddings
-
-## todo
-- input arbitrary text
-- handle images somehow. twitter is like 50% images these days. llm write me description?
-  - break up settings for embeddings and llm models
-- do something with the positives. maybe just always return if postive?
-- auto hit the "not interested" button. does that do anything?
-
-## thoughts
-- explore vector math. is this -sarcasm still outside the threshold?
+here's the idea: it's a chrome extension. it asks you "what do you NOT want to see?" you could input "linkedin slop," and it, for every twitter post, youtube video, google search result, etc., just rips out the html for things that it thinks are things you don't want to see.
